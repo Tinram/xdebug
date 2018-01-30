@@ -1,5 +1,6 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
+
 /*
    +----------------------------------------------------------------------+
    | Xdebug                                                               |
@@ -20,14 +21,14 @@
 
 
 /*
-   php.ini additions for operation:
+   php.ini additions:
       xdebug.profiler_enable = 1
-      debug.trace_format = 1
-      xdebug.collect_includes = 1   (optional)
+      xdebug.trace_format = 1
+      xdebug.collect_includes = 1
 */
 
 
-error_reporting(0); // suppress notices and warnings which disrupt terminal output
+error_reporting(0); # suppress notices and warnings that disrupt terminal output (just too many)
 
 
 if ( $argc <= 1 || $argc > 4 )
@@ -59,6 +60,7 @@ $functions = $o->getFunctions( $sortKey );
 
 // find longest function name
 $maxLen = 0;
+
 foreach( $functions as $name => $f )
 {
 	if ( strlen( $name ) > $maxLen )
@@ -75,6 +77,7 @@ echo "--------", str_repeat( '-', $maxLen - 8 ), "------------------------------
 
 // display functions
 $c = 0;
+
 foreach( $functions as $name => $f )
 {
 	$c++;
@@ -90,18 +93,19 @@ foreach( $functions as $name => $f )
 		$f['calls'],
 		$f['time-inclusive'],
 		$f['memory-inclusive'],
-		$f['time-own'], $f['memory-own']
+		$f['time-own'],
+		$f['memory-own']
 	);
 }
 
-echo PHP_EOL;
+echo PHP_EOL; # final \n for Linux terminal display
 
 
 function showUsage()
 {
 	echo "usage:\n\tphp run-cli tracefile [sortkey] [elements]\n\n";
 	echo "Allowed sortkeys:\n\tcalls, time-inclusive, memory-inclusive, time-own, memory-own\n";
-	die();
+	exit;
 }
 
 class drXdebugTraceFileParser
@@ -128,16 +132,19 @@ class drXdebugTraceFileParser
 	public function __construct( $fileName )
 	{
 		$this->handle = fopen( $fileName, 'r' );
+
 		if ( !$this->handle )
 		{
 			throw new Exception( "Can't open '$fileName'" );
 		}
+
 		$this->stack[-1] = array( '', 0, 0, 0, 0 );
 		$this->stack[ 0] = array( '', 0, 0, 0, 0 );
 
 		$this->stackFunctions = array();
 		$header1 = fgets( $this->handle );
 		$header2 = fgets( $this->handle );
+
 		if ( !preg_match( '@Version: [23].*@', $header1 ) || !preg_match( '@File format: [2-4]@', $header2 ) )
 		{
 			echo "\nThis file is not an Xdebug trace file made with format option '1' and version 2 to 4.\n";
@@ -171,18 +178,6 @@ class drXdebugTraceFileParser
 
 	private function parseLine( $line )
 	{
-	/*
-		if ( preg_match( '@^Version: (.*)@', $line, $matches ) )
-		{
-		}
-		else if ( preg_match( '@^File format: (.*)@', $line, $matches ) )
-		{
-		}
-		else if ( preg_match( '@^TRACE.*@', $line, $matches ) )
-		{
-		}
-		else // assume a normal line
-		*/
 		{
 			$parts = explode( "\t", $line );
 
@@ -232,6 +227,7 @@ class drXdebugTraceFileParser
 
 		$elem = &$this->functions[$function];
 		$elem[0]++;
+
 		if ( !in_array( $function, $this->stackFunctions ) ) {
 			$elem[1] += $time;
 			$elem[2] += $memory;
@@ -269,5 +265,3 @@ class drXdebugTraceFileParser
 		return $result;
 	}
 }
-
-?>
